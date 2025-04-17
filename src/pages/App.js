@@ -1,21 +1,53 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "../context/AuthProvider";  // Corrected path for AuthProvider
-import Home from "./Home";  // Home is in the same 'pages' folder
-import Login from "./Login";  // Login is in the same 'pages' folder
-import Register from "./Register";  // Register is in the same 'pages' folder
-import ContactUs from "./ContactUs";  // ContactUs is in the same 'pages' folder
-import Form from "./Form";  // Form is in the same 'pages' folder
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from '../context/AuthProvider';
+import Home from './Home';
+import Login from './Login';
+import Register from './Register';
+import Profile from './Profile';
+import Form from './Form';
+import ContactUs from './ContactUs';
+//import AboutUs from './AboutUs';
+
+// Protected Route Component
+const RequireAuth = ({ children }) => {
+  const { auth } = useAuth();
+  const location = useLocation();
+
+  if (!auth?.token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
 
 function App() {
   return (
-    <AuthProvider>  {/* AuthProvider wraps the entire app to provide context */}
+    <AuthProvider>
       <Router>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/contact" element={<ContactUs />} />
-          <Route path="/form" element={<Form />} />
+          
+          {/* Protected Routes */}
+          <Route
+            path="/profile"
+            element={
+              <RequireAuth>
+                <Profile />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/form"
+            element={
+              <RequireAuth>
+                <Form />
+              </RequireAuth>
+            }
+          />
         </Routes>
       </Router>
     </AuthProvider>
