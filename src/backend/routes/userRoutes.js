@@ -3,14 +3,8 @@ const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const { 
   getUserDetails, 
-  getUserDiagnosisHistory 
+  getUserHistory 
 } = require('../controllers/userController'); // Proper destructuring
-
-// history
-router.get('/history', authenticateToken, (req, res) => {
-    // Redirect to the proper user-specific endpoint
-    res.redirect(`/api/users/${req.user.userId}/history`);
-  });
 
 // Test route
 router.get('/test', (req, res) => {
@@ -26,7 +20,7 @@ router.get('/protected-route', authenticateToken, (req, res) => {
 });
 
 // User routes with authentication
+router.get('/userHistory', authenticateToken, getUserHistory);
 router.get('/:id', authenticateToken, getUserDetails);
-router.get('/:id/history', authenticateToken, getUserDiagnosisHistory);
 
 module.exports = router;

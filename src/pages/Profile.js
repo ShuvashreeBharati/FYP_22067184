@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
-import axios from '../api/axios_frontend';
+import axios from "../api/axios_frontend";
 import "../style/Profile.css";
+import UserHistory from "./UserHistory";
 
 const Profile = () => {
   const { auth, logout, isInitialized } = useAuth();
@@ -24,28 +25,26 @@ const Profile = () => {
     profilePicture: null
   });
   const [previewImage, setPreviewImage] = useState('');
-  const [diagnosisHistory, setDiagnosisHistory] = useState([]);
-  const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Fetch user details
   const fetchUserDetails = useCallback(async () => {
     if (!auth?.user?.userId) return;
-    
     try {
       const response = await axios.get(`/api/users/${auth.user.userId}`);
+      const { name, email, created_at, profile_picture } = response.data;
       setUserData({
-        name: response.data.name,
-        email: response.data.email,
-        created_at: new Date(response.data.created_at).toLocaleDateString(),
-        profile_picture: response.data.profile_picture || '/images/default-pfp.png'
+        name,
+        email,
+        created_at: new Date(created_at).toLocaleDateString(),
+        profile_picture: profile_picture || '/images/default-pfp.png'
       });
-      
       setFormData(prev => ({
         ...prev,
-        updatedName: response.data.name,
-        updatedEmail: response.data.email
+        updatedName: name,
+        updatedEmail: email
       }));
     } catch (error) {
       console.error('Error fetching user details:', error);
@@ -57,37 +56,17 @@ const Profile = () => {
     }
   }, [auth?.user?.userId, logout, navigate]);
 
-  const fetchDiagnosisHistory = useCallback(async () => {
-    if (!auth?.user?.userId) return;
-    
-    setIsRefreshingHistory(true);
-    try {
-      const response = await axios.get(`/api/users/${auth.user.userId}/history`);
-      setDiagnosisHistory(response.data || []);
-    } catch (error) {
-      console.error('Error fetching diagnosis history:', error);
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        logout();
-        navigate('/login');
-      }
-      setError(error.response?.data?.error || 'Failed to load diagnosis history');
-    } finally {
-      setIsRefreshingHistory(false);
-    }
-  }, [auth?.user?.userId, logout, navigate]);
-
+  // Initial fetch
   useEffect(() => {
     if (!isInitialized) return;
-    
     if (!auth?.token) {
       navigate('/login');
       return;
     }
-
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        await Promise.all([fetchUserDetails(), fetchDiagnosisHistory()]);
+        await fetchUserDetails();
       } catch (error) {
         console.error('Error initializing profile data:', error);
         setError('Failed to load profile data');
@@ -95,25 +74,20 @@ const Profile = () => {
         setIsLoading(false);
       }
     };
-
     fetchData();
-  }, [auth?.token, isInitialized, navigate, fetchUserDetails, fetchDiagnosisHistory]);
+  }, [auth?.token, isInitialized, navigate, fetchUserDetails]);
 
+  // Handle profile info update
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     setSuccess('');
-
     try {
-      const response = await axios.put(
-        `/api/users/${auth.user.userId}`,
-        {
-          name: formData.updatedName,
-          email: formData.updatedEmail
-        }
-      );
-
+      const response = await axios.put(`/api/users/${auth.user.userId}`, {
+        name: formData.updatedName,
+        email: formData.updatedEmail
+      });
       setUserData(prev => ({
         ...prev,
         name: response.data.name,
@@ -129,27 +103,22 @@ const Profile = () => {
     }
   };
 
+  // Handle password change
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     setSuccess('');
-
     if (formData.newPassword !== formData.confirmPassword) {
       setError('New passwords do not match');
       setIsLoading(false);
       return;
     }
-
     try {
-      await axios.put(
-        `/api/users/${auth.user.userId}/password`,
-        {
-          current_password: formData.currentPassword,
-          new_password: formData.newPassword
-        }
-      );
-
+      await axios.put(`/api/users/${auth.user.userId}/password`, {
+        current_password: formData.currentPassword,
+        new_password: formData.newPassword
+      });
       setFormData(prev => ({
         ...prev,
         currentPassword: '',
@@ -165,6 +134,7 @@ const Profile = () => {
     }
   };
 
+  // Handle profile picture change
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -173,33 +143,27 @@ const Profile = () => {
     }
   };
 
+  // Upload profile picture
   const handleProfilePictureUpload = async (e) => {
     e.preventDefault();
     if (!formData.profilePicture) return;
-
     setIsLoading(true);
     setError('');
     setSuccess('');
-
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('profile_picture', formData.profilePicture);
-
       const response = await axios.put(
         `/api/users/${auth.user.userId}/picture`,
         formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       );
-
       setUserData(prev => ({
         ...prev,
-        profile_picture: response.data.profile_picture || previewImage
+        profile_picture: response.data.profile_picture || '/images/default-pfp.png'
       }));
       setPreviewImage('');
+      setFormData(prev => ({ ...prev, profilePicture: null }));
       setSuccess('Profile picture updated successfully!');
     } catch (error) {
       console.error('Error updating profile picture:', error);
@@ -209,32 +173,20 @@ const Profile = () => {
     }
   };
 
-  const handleRefreshHistory = () => {
-    fetchDiagnosisHistory();
-  };
-
-  if (!isInitialized) {
-    return <div className="loading-container">Loading authentication...</div>;
-  }
-
-  if (!auth) {
-    return <div className="loading-container">Please log in to view your profile</div>;
-  }
+  if (!isInitialized) return <div className="loading-container">Loading authentication...</div>;
+  if (!auth) return <div className="loading-container">Please log in to view your profile</div>;
 
   return (
     <div className="profile-container">
+      {/* Header */}
       <header className="header">
-        <div className="logo">
-          Symptom Diagnosing Tool <span className="icon">➕</span>
-        </div>
+        <div className="logo">Symptom Diagnosing Tool <span className="icon">➕</span></div>
         <nav className="nav-links">
           <Link to="/">Home</Link>
           <Link to="/form">Diagnosis</Link>
           <Link to="/contact">Contact Us</Link>
           {auth?.token ? (
-            <button onClick={logout} className="logout-button">
-              Log Out
-            </button>
+            <button onClick={logout} className="logout-button">Log Out</button>
           ) : (
             <>
               <Link to="/login">Login</Link>
@@ -244,13 +196,14 @@ const Profile = () => {
         </nav>
       </header>
 
+      {/* Profile content */}
       <div className="profile-content">
         <h2>User Profile</h2>
-
         {error && <p className="error-message">{error}</p>}
         {success && <p className="success-message">{success}</p>}
 
         <div className="profile-sections">
+          {/* User Details */}
           <div className="profile-section user-details">
             <h3>User Details</h3>
             <div className="profile-picture-section">
@@ -282,30 +235,16 @@ const Profile = () => {
             </div>
 
             <div className="user-info">
-              <div className="info-row">
-                <span className="info-label">Name:</span>
-                <span className="info-value">{userData.name}</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Email:</span>
-                <span className="info-value">{userData.email}</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Member Since:</span>
-                <span className="info-value">{userData.created_at}</span>
-              </div>
-              <button 
-                onClick={() => setIsEditing(!isEditing)} 
-                className="edit-button"
-                disabled={isLoading}
-              >
+              <div className="info-row"><span className="info-label">Name:</span><span className="info-value">{userData.name}</span></div>
+              <div className="info-row"><span className="info-label">Email:</span><span className="info-value">{userData.email}</span></div>
+              <div className="info-row"><span className="info-label">Member Since:</span><span className="info-value">{userData.created_at}</span></div>
+              <button onClick={() => setIsEditing(!isEditing)} className="edit-button" disabled={isLoading}>
                 {isEditing ? 'Cancel Edit' : 'Edit Profile'}
               </button>
 
               {isEditing && (
                 <form onSubmit={handleProfileUpdate} className="edit-form">
-                  <label>
-                    New Name:
+                  <label>New Name:
                     <input
                       type="text"
                       value={formData.updatedName}
@@ -313,8 +252,7 @@ const Profile = () => {
                       required
                     />
                   </label>
-                  <label>
-                    New Email:
+                  <label>New Email:
                     <input
                       type="email"
                       value={formData.updatedEmail}
@@ -330,49 +268,27 @@ const Profile = () => {
             </div>
           </div>
 
+          {/* Diagnosis History Preview */}
           <div className="profile-section diagnosis-history">
             <h3>Diagnosis History</h3>
-            <div className="history-controls">
-              <button
-                onClick={handleRefreshHistory}
-                className="refresh-button"
-                disabled={isRefreshingHistory}
-              >
-                {isRefreshingHistory ? 'Refreshing...' : '↻ Refresh'}
-              </button>
-            </div>
-
-            {isRefreshingHistory ? (
-              <p>Refreshing history...</p>
-            ) : diagnosisHistory.length === 0 ? (
-              <div className="empty-history">
-                <p>No diagnosis history yet</p>
-                <Link to="/form" className="diagnose-button">
-                  Get Diagnosed Now
-                </Link>
-              </div>
-            ) : (
-              <div className="history-items">
-                {diagnosisHistory.map((item) => (
-                  <div key={item.prediction_id} className="history-item">
-                    <div className="history-date">
-                      {new Date(item.visited_at).toLocaleDateString()}
-                    </div>
-                    <div className="history-diagnosis">
-                      <strong>{item.predicted_disease}</strong>
-                      <span>{Math.round(item.confidence * 100)}% confidence</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            
+            {/* Use UserHistory with previewMode */}
+            <UserHistory previewMode={true} />
+            
+            <Link 
+              to="/history" 
+              className="show-more-link"
+              style={{color: 'black', padding: '10px', display: 'inline-block' }}
+            >
+              Show More
+            </Link>
           </div>
 
+          {/* Account Settings */}
           <div className="profile-section settings">
             <h3>Account Settings</h3>
             <form onSubmit={handlePasswordUpdate} className="password-form">
-              <label>
-                Current Password:
+              <label>Current Password:
                 <input
                   type="password"
                   value={formData.currentPassword}
@@ -380,8 +296,7 @@ const Profile = () => {
                   required
                 />
               </label>
-              <label>
-                New Password:
+              <label>New Password:
                 <input
                   type="password"
                   value={formData.newPassword}
@@ -389,8 +304,7 @@ const Profile = () => {
                   required
                 />
               </label>
-              <label>
-                Confirm New Password:
+              <label>Confirm New Password:
                 <input
                   type="password"
                   value={formData.confirmPassword}

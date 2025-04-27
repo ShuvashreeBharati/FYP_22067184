@@ -6,7 +6,8 @@ import Register from './Register';
 import Profile from './Profile';
 import Form from './Form';
 import ContactUs from './ContactUs';
-//import AboutUs from './AboutUs';
+import UserHistory from './UserHistory';
+// import AboutUs from './AboutUs';
 
 // Protected Route Component
 const RequireAuth = ({ children }) => {
@@ -30,7 +31,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/contact" element={<ContactUs />} />
-          
+
           {/* Protected Routes */}
           <Route
             path="/profile"
@@ -45,6 +46,16 @@ function App() {
             element={
               <RequireAuth>
                 <Form />
+              </RequireAuth>
+            }
+          />
+          
+          {/* User History Route (full history) */}
+          <Route
+            path="/history" 
+            element={
+              <RequireAuth>
+                <UserHistory />
               </RequireAuth>
             }
           />

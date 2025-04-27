@@ -1,0 +1,59 @@
+.history-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .history-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .history-controls {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .refresh-button {
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .history-items {
+    margin-top: 20px;
+  }
+  
+  .history-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  .history-date {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .history-diagnosis {
+    font-size: 16px;
+  }
+  
+  .error-message {
+    color: red;
+  }
+  
+  .empty-history {
+    text-align: center;
+  }
+  
+  .diagnose-button {
+    padding: 10px 15px;
+    background-color: #008CBA;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  

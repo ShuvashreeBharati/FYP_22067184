@@ -46,20 +46,33 @@ module.exports = function(pool) {
     async (req, res) => {
       const client = await pool.connect();
       try {
-        // 1. Process symptoms
-        const symptoms = Array.isArray(req.body.symptoms) 
-          ? req.body.symptoms 
-          : req.body.symptoms.split(',').map(s => s.trim()).filter(Boolean);
-  
-        // 2. Call Flask API - only get top 3 predictions
-        const flaskResponse = await axios.post(`${FLASK_API_URL}/predict`, {
-          symptoms: symptoms.join(','),
-          user_id: req.user.userId,
-          top_n: 3 // Request only top 3 predictions
+        // 1. Process symptoms safely
+        let symptoms = [];
+        if (Array.isArray(req.body.symptoms)) {
+          symptoms = req.body.symptoms;
+        } else if (typeof req.body.symptoms === 'string') {
+          symptoms = req.body.symptoms.split(',').map(s => s.trim()).filter(Boolean);
+        } else {
+          symptoms = []; // If undefined or invalid, default to empty array
+        }
+
+        console.log("Sending to Flask:", {
+          selected_symptoms: symptoms,  // this is an array
+          text_symptoms: req.body.text_symptoms || "",
+          user_id: req.user.userId
         });
+          
+        // 2. Call Flask API 
+        const flaskResponse = await axios.post(`${FLASK_API_URL}/predict`, {
+          selected_symptoms: symptoms.join(','),  // still send as comma-separated string
+          text_symptoms: req.body.text_symptoms || "",
+          user_id: req.user.userId
+        });        
   
         const mlResponse = flaskResponse.data;
   
+        console.log("Flask Response Data:", flaskResponse.data);
+
         // 3. Begin transaction
         await client.query('BEGIN');
   
@@ -113,5 +126,28 @@ module.exports = function(pool) {
     }
   );
   
+  // Fetch history from Flask
+  router.get('/history', authenticateToken, async (req, res) => {
+    try {
+      // Forward the request to Flask for fetching user history
+      const flaskResponse = await axios.get(`${FLASK_API_URL}/history`, {
+        params: { user_id: req.user.userId }  // Pass the user_id from token
+      });
+
+      // Return the response from Flask to the client
+      res.json(flaskResponse.data);
+
+    } catch (err) {
+      console.error("Error fetching history from Flask:", err);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch history from Flask",
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
+    }
+  });
+
   return router;
 };
+
+
