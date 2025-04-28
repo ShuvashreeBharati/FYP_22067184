@@ -67,7 +67,7 @@ const Register = () => {
 
     try {
       const response = await api.post(
-        "/register",
+        "/auth/register",
         JSON.stringify({ name, email, password: pwd }),
         {
           headers: { "Content-Type": "application/json" },

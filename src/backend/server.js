@@ -8,7 +8,14 @@ const app = express();
 const PORT = process.env.PORT || 3500;
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN,
+  credentials: process.env.CORS_CREDENTIALS === 'true',
+  methods: process.env.CORS_METHODS,
+  allowedHeaders: process.env.CORS_ALLOWED_HEADERS
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Serve static uploads folder

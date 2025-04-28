@@ -94,15 +94,18 @@ module.exports = function(pool) {
           await client.query(
             `INSERT INTO user_history (
               user_id, prediction_id, visited_at, 
-              predicted_disease, confidence
-            ) VALUES ($1, $2, NOW(), $3, $4)`,
+              predicted_disease, confidence,
+              predicted_description, predicted_precautions
+            ) VALUES ($1, $2, NOW(), $3, $4, $5, $6::jsonb)`,
             [
               req.user.userId,
               predResult.rows[0].prediction_id,
               mlResponse.predictions[0].disease_name, // Main predicted disease
-              mlResponse.predictions[0].confidence
+              mlResponse.predictions[0].confidence,
+              mlResponse.predictions[0].description || 'No description available.',
+              JSON.stringify(mlResponse.predictions[0].precautions || ['Consult a healthcare professional'])
             ]
-          );
+          );          
         }
   
         await client.query('COMMIT');
@@ -127,7 +130,7 @@ module.exports = function(pool) {
   );
   
   // Fetch history from Flask
-  router.get('/history', authenticateToken, async (req, res) => {
+  router.get('/userHistory', authenticateToken, async (req, res) => {
     try {
       // Forward the request to Flask for fetching user history
       const flaskResponse = await axios.get(`${FLASK_API_URL}/history`, {
