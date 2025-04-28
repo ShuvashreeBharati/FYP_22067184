@@ -219,14 +219,21 @@ def get_user_history():
 
             history = []
             for row in rows:
+                precautions = row[5]
+                if isinstance(precautions, str):
+                    try:
+                        precautions = json.loads(precautions)
+                    except json.JSONDecodeError:
+                        precautions = ['Consult a healthcare professional']
                 history.append({
                     'prediction_id': row[0],
                     'visited_at': row[1].isoformat(),
                     'predicted_disease': row[2],
                     'confidence': float(row[3]),
                     'predicted_description': row[4],
-                    'predicted_precautions': row[5]
+                    'predicted_precautions': precautions
                 })
+
 
         return jsonify(success=True, history=history)
     except Exception as e:
