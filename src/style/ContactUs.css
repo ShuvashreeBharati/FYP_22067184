@@ -5,7 +5,7 @@
     align-items: center;
     padding: 30px;
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(to right, #f4f7fc, #e0e4e8);
+    background: linear-gradient(to right, #daeaf7, #e3ecf3);
     min-height: 100vh;
     justify-content: center;
     transition: all 0.3s ease;
@@ -15,7 +15,7 @@
 .contact-title {
     font-size: 36px;
     font-weight: bold;
-    color: #333;
+    color: #2d5d89;
     margin-bottom: 20px;
     text-align: center;
     transition: color 0.3s ease;
@@ -24,7 +24,7 @@
 /* Description text */
 .contact-description {
     font-size: 18px;
-    color: #555;
+    color: #49789e;
     margin-bottom: 30px;
     text-align: center;
     max-width: 600px;
@@ -32,10 +32,10 @@
 
 /* Contact form */
 .contact-form {
-    background-color: #fff;
+    background: #e6f4ff; /* More light blue */
     padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    box-shadow: 6px 6px 15px rgba(185, 218, 255, 0.6), -6px -6px 15px #ffffff;
     width: 100%;
     max-width: 600px;
     display: flex;
@@ -62,17 +62,19 @@
     width: 100%;
     padding: 12px;
     margin-bottom: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    border: none;
+    border-radius: 12px;
     font-size: 16px;
-    color: #333;
+    color: #2d5d89;
+    background: #e6f4ff;
+    box-shadow: inset 2px 2px 5px rgba(185, 218, 255, 0.5), inset -2px -2px 5px #ffffff;
     box-sizing: border-box;
-    transition: border 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 /* Error input field */
 .input-error {
-    border-color: #ff4c4c;
+    box-shadow: inset 2px 2px 5px #ffbaba, inset -2px -2px 5px #ffecec;
 }
 
 /* Error message */
@@ -87,17 +89,19 @@
 /* Submit button styling */
 .submit-button {
     padding: 12px 20px;
-    background-color: #4dacac;
-    color: #ffffff;
+    background: #e6f4ff;
+    color: #2d5d89;
     border: none;
-    border-radius: 4px;
+    border-radius: 12px;
+    box-shadow: 5px 5px 10px rgba(185, 218, 255, 0.6), -5px -5px 10px #ffffff;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-weight: bold;
+    transition: all 0.3s ease, transform 0.3s ease;
 }
 
 .submit-button:hover {
-    background-color: #58b5b0;
+    box-shadow: inset 5px 5px 10px rgba(185, 218, 255, 0.6), inset -5px -5px 10px #ffffff;
     transform: scale(1.05);
 }
 
@@ -108,8 +112,8 @@
     align-items: center;
     padding: 50px;
     background: linear-gradient(145deg, #4dacac, #58b5b0);
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    box-shadow: 6px 6px 15px rgba(76, 172, 172, 0.5), -6px -6px 15px rgba(88, 181, 176, 0.5);
     color: white;
     text-align: center;
     max-width: 600px;
@@ -130,21 +134,22 @@
     animation: fadeIn 1.5s ease-in;
 }
 
+/* Go back link */
 .go-back-link {
     text-decoration: none;
     font-size: 16px;
     color: #ffffff;
     margin-top: 20px;
     padding: 8px 15px;
-    border-radius: 4px;
-    background-color: #126268;
+    border-radius: 10px;
+    background: #126268;
     transition: all 0.3s ease;
     font-weight: 500;
+    box-shadow: 4px 4px 8px rgba(18, 98, 104, 0.6), -4px -4px 8px rgba(18, 98, 104, 0.3);
 }
 
 .go-back-link:hover {
-    background-color: #58b5b0;
-    color: #ffffff;
+    background: #58b5b0;
     transform: translateX(-3px);
 }
 
@@ -159,7 +164,6 @@
         transform: translateY(0);
     }
 }
-
 
 /* Responsive Design */
 @media (max-width: 768px) {

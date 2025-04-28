@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
-import axios from "../api/axios_frontend";
+import api from "../api/axios_frontend";
 import "../style/Profile.css";
 import UserHistory from "./UserHistory";
 
@@ -15,7 +15,7 @@ const Profile = () => {
     created_at: '',
     profile_picture: '/images/default-pfp.png'
   });
-  const [isEditing, setIsEditing] = useState(false);
+
   const [formData, setFormData] = useState({
     updatedName: '',
     updatedEmail: '',
@@ -24,22 +24,41 @@ const Profile = () => {
     confirmPassword: '',
     profilePicture: null
   });
+
   const [previewImage, setPreviewImage] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Fetch user details
+  const userId = JSON.parse(localStorage.getItem('userData'))?.userId;
+  const backendUrl = process.env.REACT_APP_NODE_API_URL || 'http://localhost:3500';
+
+  const formatUrl = useCallback((path) => {
+    if (!path) return '/images/default-pfp.png';
+    if (path.startsWith('http')) return path;
+    
+    // Remove any leading slashes from path
+    const cleanPath = path.replace(/^\/+/, '');
+    
+    // Remove any trailing slashes from backendUrl
+    const cleanBackendUrl = backendUrl.replace(/\/+$/, '');
+    
+    return `${cleanBackendUrl}/${cleanPath}`;
+  }, [backendUrl]);
+  
+
   const fetchUserDetails = useCallback(async () => {
-    if (!auth?.user?.userId) return;
+    if (!userId) return;
     try {
-      const response = await axios.get(`/api/users/${auth.user.userId}`);
+      const response = await api.get(`/api/users/${userId}`);
       const { name, email, created_at, profile_picture } = response.data;
+
       setUserData({
         name,
         email,
         created_at: new Date(created_at).toLocaleDateString(),
-        profile_picture: profile_picture || '/images/default-pfp.png'
+        profile_picture: formatUrl(profile_picture)
       });
       setFormData(prev => ({
         ...prev,
@@ -54,9 +73,8 @@ const Profile = () => {
       }
       setError(error.response?.data?.error || 'Failed to load user details');
     }
-  }, [auth?.user?.userId, logout, navigate]);
+  }, [userId, logout, navigate, formatUrl]);
 
-  // Initial fetch
   useEffect(() => {
     if (!isInitialized) return;
     if (!auth?.token) {
@@ -64,8 +82,8 @@ const Profile = () => {
       return;
     }
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
         await fetchUserDetails();
       } catch (error) {
         console.error('Error initializing profile data:', error);
@@ -75,16 +93,15 @@ const Profile = () => {
       }
     };
     fetchData();
-  }, [auth?.token, isInitialized, navigate, fetchUserDetails]);
+  }, [auth?.token, isInitialized, fetchUserDetails, navigate]);
 
-  // Handle profile info update
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     setSuccess('');
     try {
-      const response = await axios.put(`/api/users/${auth.user.userId}`, {
+      const response = await api.put(`/api/users/${userId}`, {
         name: formData.updatedName,
         email: formData.updatedEmail
       });
@@ -103,7 +120,6 @@ const Profile = () => {
     }
   };
 
-  // Handle password change
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -115,7 +131,7 @@ const Profile = () => {
       return;
     }
     try {
-      await axios.put(`/api/users/${auth.user.userId}/password`, {
+      await api.put(`/api/users/${userId}/password`, {
         current_password: formData.currentPassword,
         new_password: formData.newPassword
       });
@@ -134,7 +150,6 @@ const Profile = () => {
     }
   };
 
-  // Handle profile picture change
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -143,69 +158,80 @@ const Profile = () => {
     }
   };
 
-  // Upload profile picture
   const handleProfilePictureUpload = async (e) => {
     e.preventDefault();
     if (!formData.profilePicture) return;
-    setIsLoading(true);
-    setError('');
-    setSuccess('');
+  
+    const pictureForm = new FormData();
+    pictureForm.append('profile_picture', formData.profilePicture);
+  
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('profile_picture', formData.profilePicture);
-      const response = await axios.put(
-        `/api/users/${auth.user.userId}/picture`,
-        formDataToSend,
+      setIsLoading(true);
+      setError('');
+      setSuccess('');
+  
+      const response = await api.put(
+        `/api/users/${userId}/picture`,
+        pictureForm,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
+  
+      let newProfilePic = response.data.profile_picture;
+  
+      // Safely join backend URL and profile picture path
+      const formattedPicUrl = `${backendUrl.replace(/\/$/, '')}/${newProfilePic.replace(/^\/+/, '')}`;
+  
+      // ✨ Save to localStorage
+      localStorage.setItem('profile_pic_url', formattedPicUrl);
+  
+      // ✨ Immediately trigger a 'storage' event so Home page NavBar listens
+      window.dispatchEvent(new Event('storage'));
+  
+      // Update user data state
       setUserData(prev => ({
         ...prev,
-        profile_picture: response.data.profile_picture || '/images/default-pfp.png'
+        profile_picture: formattedPicUrl
       }));
+  
       setPreviewImage('');
       setFormData(prev => ({ ...prev, profilePicture: null }));
       setSuccess('Profile picture updated successfully!');
     } catch (error) {
-      console.error('Error updating profile picture:', error);
-      setError(error.response?.data?.error || 'Failed to update profile picture');
+      console.error('Error uploading profile picture:', error);
+      setError(error.response?.data?.error || 'Failed to upload profile picture');
     } finally {
       setIsLoading(false);
     }
   };
+  
+  
+  
 
   if (!isInitialized) return <div className="loading-container">Loading authentication...</div>;
   if (!auth) return <div className="loading-container">Please log in to view your profile</div>;
 
   return (
     <div className="profile-container">
-      {/* Header */}
-      <header className="header">
-        <div className="logo">Symptom Diagnosing Tool <span className="icon">➕</span></div>
-        <nav className="nav-links">
-          <Link to="/">Home</Link>
-          <Link to="/form">Diagnosis</Link>
-          <Link to="/contact">Contact Us</Link>
-          {auth?.token ? (
-            <button onClick={logout} className="logout-button">Log Out</button>
-          ) : (
-            <>
-              <Link to="/login">Login</Link>
-              <Link to="/register">Register</Link>
-            </>
-          )}
-        </nav>
+      <header className="header small-header">
+        <Link to="/" className="logo small-logo">
+          <span className="logo-text">Symptom Diagnosing Tool</span>
+          <span className="logo-plus">+</span>
+        </Link>
+        {auth?.token && (
+          <button onClick={logout} className="logout-button small-logout">
+            Log Out
+          </button>
+        )}
       </header>
 
-      {/* Profile content */}
       <div className="profile-content">
-        <h2>User Profile</h2>
         {error && <p className="error-message">{error}</p>}
         {success && <p className="success-message">{success}</p>}
 
-        <div className="profile-sections">
-          {/* User Details */}
-          <div className="profile-section user-details">
-            <h3>User Details</h3>
+        <div className="profile-sections custom-layout">
+          {/* Left Section */}
+          <div className="left-section">
+            <h2>User Details</h2>
             <div className="profile-picture-section">
               <img
                 src={previewImage || userData.profile_picture}
@@ -227,19 +253,36 @@ const Profile = () => {
                   Change Photo
                 </label>
                 {previewImage && (
-                  <button type="submit" className="save-button" disabled={isLoading}>
-                    {isLoading ? 'Saving...' : 'Save'}
+                  <button 
+                    type="submit" 
+                    className={`save-button ${isLoading ? 'button-loading' : ''}`} 
+                    disabled={isLoading}
+                  >
+                    {!isLoading ? 'Save' : 'Saving...'}
                   </button>
                 )}
               </form>
             </div>
 
             <div className="user-info">
-              <div className="info-row"><span className="info-label">Name:</span><span className="info-value">{userData.name}</span></div>
-              <div className="info-row"><span className="info-label">Email:</span><span className="info-value">{userData.email}</span></div>
-              <div className="info-row"><span className="info-label">Member Since:</span><span className="info-value">{userData.created_at}</span></div>
-              <button onClick={() => setIsEditing(!isEditing)} className="edit-button" disabled={isLoading}>
-                {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+              <div className="info-row">
+                <span className="info-label">Name:</span>
+                <span className="info-value">{userData.name}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Email:</span>
+                <span className="info-value">{userData.email}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Member Since:</span>
+                <span className="info-value">{userData.created_at}</span>
+              </div>
+              <button 
+                onClick={() => setIsEditing(!isEditing)} 
+                className={`edit-button ${isLoading ? 'button-loading' : ''}`}
+                disabled={isLoading}
+              >
+                {!isLoading && (isEditing ? 'Cancel Edit' : 'Edit Profile')}
               </button>
 
               {isEditing && (
@@ -260,63 +303,69 @@ const Profile = () => {
                       required
                     />
                   </label>
-                  <button type="submit" disabled={isLoading}>
-                    {isLoading ? 'Saving...' : 'Save Changes'}
+                  <button 
+                    type="submit" 
+                    className={`save-button ${isLoading ? 'button-loading' : ''}`} 
+                    disabled={isLoading}
+                  >
+                    {!isLoading && 'Save Changes'}
                   </button>
                 </form>
               )}
             </div>
           </div>
 
-          {/* Diagnosis History Preview */}
-          <div className="profile-section diagnosis-history">
-            <h3>Diagnosis History</h3>
-            
-            {/* Use UserHistory with previewMode */}
-            <UserHistory previewMode={true} />
-            
-            <Link 
-              to="/history" 
-              className="show-more-link"
-              style={{color: 'black', padding: '10px', display: 'inline-block' }}
-            >
-              Show More
-            </Link>
+          {/* Right Section */}
+          <div className="right-section">
+            <div className="right-top">
+              <UserHistory previewMode={true} />
+              <Link 
+                to="/history" 
+                className="show-more-link"
+                style={{ color: 'black', padding: '6px', fontSize: '0.9rem', display: 'inline-block' }}
+              >
+                Show More
+              </Link>
+            </div>
+
+            <div className="right-bottom">
+              <h2>Account Settings</h2>
+              <form onSubmit={handlePasswordUpdate} className="password-form">
+                <label>Current Password:
+                  <input
+                    type="password"
+                    value={formData.currentPassword}
+                    onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                    required
+                  />
+                </label>
+                <label>New Password:
+                  <input
+                    type="password"
+                    value={formData.newPassword}
+                    onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                    required
+                  />
+                </label>
+                <label>Confirm New Password:
+                  <input
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    required
+                  />
+                </label>
+                <button 
+                  type="submit" 
+                  className={`save-button ${isLoading ? 'button-loading' : ''}`}
+                  disabled={isLoading}
+                >
+                  {!isLoading && 'Change Password'}
+                </button>
+              </form>
+            </div>
           </div>
 
-          {/* Account Settings */}
-          <div className="profile-section settings">
-            <h3>Account Settings</h3>
-            <form onSubmit={handlePasswordUpdate} className="password-form">
-              <label>Current Password:
-                <input
-                  type="password"
-                  value={formData.currentPassword}
-                  onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                  required
-                />
-              </label>
-              <label>New Password:
-                <input
-                  type="password"
-                  value={formData.newPassword}
-                  onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                  required
-                />
-              </label>
-              <label>Confirm New Password:
-                <input
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  required
-                />
-              </label>
-              <button type="submit" disabled={isLoading}>
-                {isLoading ? 'Changing...' : 'Change Password'}
-              </button>
-            </form>
-          </div>
         </div>
       </div>
     </div>

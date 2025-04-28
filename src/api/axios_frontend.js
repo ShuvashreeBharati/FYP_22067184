@@ -5,13 +5,15 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' }
 });
 
-// Simple request interceptor
+// Request interceptor to attach token
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('authToken'); // get from localStorage
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers['Authorization'] = `Bearer ${token}`; // Add Bearer token
   }
   return config;
+}, error => {
+  return Promise.reject(error);
 });
 
 export default api;

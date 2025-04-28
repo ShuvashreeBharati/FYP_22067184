@@ -56,14 +56,17 @@ const UserHistory = ({ previewMode = false }) => {
     <div className={previewMode ? "preview-history" : "history-container"}>
       {!previewMode && (
         <header className="header">
-          <div className="logo">
-            Symptom Diagnosing Tool <span className="icon">➕</span>
+          <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+          <span className="logo-text">Symptom Diagnosing Tool</span>
+          <span className="logo-plus">+</span>
           </div>
         </header>
       )}
 
       <div className="history-content">
-        <h2>{previewMode ? "Recent Diagnoses" : "Your Diagnosis History"}</h2>
+        <h2 className={previewMode ? "small-heading" : ""}>
+          {previewMode ? "Recent Diagnoses" : "Your Diagnosis History"}
+        </h2>
 
         {error && <p className="error-message">{error}</p>}
 
@@ -89,25 +92,37 @@ const UserHistory = ({ previewMode = false }) => {
             )}
           </div>
         ) : (
-          <div className="history-items">
-            {displayedHistory.map((item, index) => (
-              <div key={index} className="history-item">
-                <div className="history-diagnosis">
-                  <strong>Disease:</strong> {item.predicted_disease}
-                </div>
-                {!previewMode && (
-                  <>
-                    <div className="history-description">
-                      <strong>Description:</strong> {item.predicted_description || 'N/A'}
+          <>
+            {previewMode ? (
+              <div className="history-items">
+                {displayedHistory.map((item, index) => (
+                  <div key={index} className="history-item">
+                    <div className="history-diagnosis">
+                      <strong>Disease:</strong> {item.predicted_disease}
                     </div>
-                    <div className="history-precautions">
-                      <strong>Precautions:</strong> {Array.isArray(item.predicted_precautions) ? item.predicted_precautions.join(', ') : 'N/A'}
-                    </div>
-                  </>
-                )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="history-scroll-container">
+                <div className="history-items">
+                  {displayedHistory.map((item, index) => (
+                    <div key={index} className="history-item">
+                      <div className="history-diagnosis">
+                        <strong>Disease:</strong> {item.predicted_disease}
+                      </div>
+                      <div className="history-description">
+                        <strong>Description:</strong> {item.predicted_description || 'N/A'}
+                      </div>
+                      <div className="history-precautions">
+                        <strong>Precautions:</strong> {Array.isArray(item.predicted_precautions) ? item.predicted_precautions.join(', ') : 'N/A'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

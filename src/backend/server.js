@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const pool = require('./config/db'); // Import pool here
+const pool = require('./config/db');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3500;
@@ -10,12 +11,22 @@ const PORT = process.env.PORT || 3500;
 app.use(cors());
 app.use(express.json());
 
+// Serve static uploads folder
+app.use('/uploads', express.static('uploads', {
+  setHeaders: (res, path) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
+
 // Routes
-app.use('/api', require('./flaskRoutes')(pool)); // Pass pool to flaskRoutes
+app.use('/api', require('./flaskRoutes')(pool));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/auth', require('./routes/auth'));
+app.use('/api/profile', require('./routes/profileRoutes')); 
+app.use('/api/feedback', require('./routes/feedbackRoutes')); 
+app.use('/api/enquiry', require('./routes/enquiryRoutes'));
 
-// Health check endpoint
+// Check endpoint
 app.get('/api/status', (req, res) => {
   res.json({ 
     status: 'OK',
@@ -23,7 +34,9 @@ app.get('/api/status', (req, res) => {
       diagnose: 'POST /api/diagnose',
       history: 'GET /api/history',
       users: '/api/users',
-      auth: '/auth'
+      auth: '/auth',
+      feedback: '/api/feedback',
+      enquiry: '/api/enquiry'
     }
   });
 });
@@ -36,4 +49,6 @@ app.listen(PORT, () => {
   console.log(`   - GET /api/history`);
   console.log(`   - /api/users/*`);
   console.log(`   - /auth/*`);
+  console.log(`   - /api/feedback/*`);
+  console.log(`   - /api/enquiry/*`);
 });

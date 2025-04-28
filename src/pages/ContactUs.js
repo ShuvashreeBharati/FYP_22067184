@@ -1,14 +1,40 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "../api/axios_frontend";
 import '../style/ContactUs.css';
-
 
 const ContactUs = () => {
   const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: '',
+  });
 
-  const handleSubmit = (event) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setSubmitted(true); // Set the form as submitted
+
+    try {
+      const userData = JSON.parse(localStorage.getItem('userData'));
+      const userId = userData?.userId || null;
+
+      const enquiryPayload = {
+        user_id: userId,
+        subject: `Message from ${formData.name} (${formData.email})`,
+        message: formData.message,
+      };
+
+      await axios.post('/api/enquiry/send-enquiry', enquiryPayload);
+
+      setSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting enquiry:', error);
+      alert('Failed to send your message. Please try again later.');
+    }
   };
 
   return (
@@ -25,17 +51,23 @@ const ContactUs = () => {
               type="text"
               name="name"
               placeholder="Your Name"
+              value={formData.name}
+              onChange={handleChange}
               required
             />
             <input
               type="email"
               name="email"
               placeholder="Your Email"
+              value={formData.email}
+              onChange={handleChange}
               required
             />
             <textarea
               name="message"
               placeholder="Your Message"
+              value={formData.message}
+              onChange={handleChange}
               required
             />
             <button type="submit">Submit</button>

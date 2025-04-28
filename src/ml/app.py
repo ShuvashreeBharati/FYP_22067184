@@ -170,7 +170,7 @@ def predict_or_fetch_info():
         predictions = []
         for idx in top_indices:
             disease_name = df.iloc[idx]['disease']
-            info = disease_info_dict.get(disease_name, {})
+            info = disease_info_dict.get(disease_name.lower(), {})
             predictions.append({
                 'disease_id': int(idx),
                 'disease_name': disease_name,
@@ -238,3 +238,5 @@ def get_user_history():
 # ------------------ RUN APP ------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
+
+

@@ -1,59 +1,313 @@
-.history-container {
-    padding: 20px;
-    font-family: Arial, sans-serif;
+/* General Reset and Font */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f7fa;
+    margin: 0;
+    padding: 0;
   }
   
-  .history-content {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  
-  .history-controls {
+  /* Header */
+  .header {
+    background: #e0f7ff;
+    padding: 1rem 2rem;
+    margin-bottom: 2rem;
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    box-shadow: inset 4px 4px 10px #c9e6f0, inset -4px -4px 10px #ffffff;
   }
   
-  .refresh-button {
-    padding: 10px 15px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
+  .logo-text {
+    font-size: 1.6rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #125b82, #299eb6);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
   
-  .history-items {
-    margin-top: 20px;
+  .logo-plus {
+    color: #0e4f72;
+    padding: 3px 8px;
+    margin-left: 6px;
+    border-radius: 8px;
+    font-size: 2rem;
+    font-weight: 600;
   }
   
-  .history-item {
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+  /* Main Containers */
+  .history-container,
+  .preview-history {
+    padding: 2rem;
+    background-color: #fcfdff;
+    min-height: 100vh;
   }
   
-  .history-date {
-    font-size: 14px;
-    color: #555;
+  /* History Content */
+  .history-content {
+    background: #eff2f6;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 8px 8px 20px #d9e2eb, -8px -8px 20px #ffffff;
   }
   
-  .history-diagnosis {
-    font-size: 16px;
-  }
-  
-  .error-message {
-    color: red;
-  }
-  
-  .empty-history {
+  .history-content h2 {
+    margin-bottom: 2rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #627e99;
     text-align: center;
   }
   
-  .diagnose-button {
-    padding: 10px 15px;
-    background-color: #008CBA;
+  /* Error Message */
+  .error-message {
+    color: #e74c3c;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Refresh Button */
+  .history-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+  }
+  
+  .refresh-button {
+    background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
     border: none;
+    padding: 0.7rem 1.6rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 4px 4px 10px #c6d4e2, -4px -4px 10px #ffffff;
+  }
+  
+  .refresh-button:hover {
+    background: linear-gradient(135deg, #2980b9, #3498db);
+  }
+  
+  /* Loading State */
+  .loading-container {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #7f8c8d;
+    margin-top: 5rem;
+  }
+  
+  /* Empty History State */
+  .empty-history {
+    text-align: center;
+    margin-top: 3rem;
+    padding: 2rem;
+    background: #f0f4f8;
+    border-radius: 20px;
+    box-shadow: inset 3px 3px 8px #dce4ec, inset -3px -3px 8px #ffffff;
+  }
+  
+  .empty-history p {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+    margin-bottom: 1.5rem;
+  }
+  
+  .diagnose-button {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+    padding: 0.8rem 1.6rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 3px 3px 6px #b8d6c5, -3px -3px 6px #ffffff;
+  }
+  
+  .diagnose-button:hover {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+  }
+  
+  /* History Items Grid */
+  .history-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  
+  /* Individual History Card */
+  .history-item {
+    background: #f4f9ff;
+    border: 1px solid #e1e5ea;
+    border-radius: 20px;
+    padding: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 6px 6px 12px #d6e0eb, -6px -6px 12px #ffffff;
+    transition: all 0.3s ease;
+  }
+  
+  /* Scrollbar inside History Card */
+  .history-item::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .history-item::-webkit-scrollbar-thumb {
+    background-color: #c2d8f8;
+    border-radius: 8px;
+  }
+  
+  .history-item::-webkit-scrollbar-track {
+    background: #eaf2fb;
+  }
+  
+  /* Hover Effect */
+  .history-item:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  }
+  
+  /* Diagnosis, Description, Precautions */
+  .history-diagnosis,
+  .history-description,
+  .history-precautions {
+    font-family: 'Inter', sans-serif;
+    color: #555;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  
+  .history-diagnosis strong,
+  .history-description strong,
+  .history-precautions strong {
+    color: #3498db;
+    font-weight: 600;
+  }
+  
+  .history-precautions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .history-precautions::before {
+    content: "🛡️ ";
+  }
+  
+  /* Scroll Container for Long History */
+  .history-scroll-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
+  }
+  
+  .history-scroll-container::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .history-scroll-container::-webkit-scrollbar-thumb {
+    background-color: #c2d8f8;
+    border-radius: 10px;
+  }
+  
+  .history-scroll-container::-webkit-scrollbar-track {
+    background: #eaf2fb;
+  }
+  
+  /* Preview Mode Adjustments */
+  .preview-history {
+    padding: 1rem;
+    background: transparent;
+    min-height: auto;
+  }
+  
+  /* Preview Heading */
+  .preview-history h2 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: #34495e;
+  }
+  
+  /* Container for Preview Items */
+  .preview-history .history-content {
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+  }
+  
+  /* Items inside Preview */
+  .preview-history .history-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+  }
+  
+  /* Individual Preview Card */
+  .preview-history .history-item {
+    background: #f0f8ff;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #34495e;
+    box-shadow: 3px 3px 6px #c7dff0, -3px -3px 6px #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: all 0.3s ease;
+  }
+  
+  /* Hover Animation */
+  .preview-history .history-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  }
+  
+  /* Disease text inside Preview Item */
+  .preview-history .history-diagnosis {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  /* Hide extra details like description and precautions */
+  .preview-history .history-description,
+  .preview-history .history-precautions {
+    display: none;
+  }
+  
+  /* Remove Scrollbars in Preview */
+  .preview-history .history-items::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Responsive Tweaks */
+  @media (max-width: 600px) {
+    .preview-history {
+      padding: 0.5rem;
+    }
+  
+    .preview-history .history-item {
+      font-size: 0.8rem;
+      padding: 6px 10px;
+    }
   }
   

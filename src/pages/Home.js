@@ -1,65 +1,149 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../style/Home.css';
 
 const Home = () => {
   const [feedback, setFeedback] = useState('');
+  const [rating, setRating] = useState(0);
   const [submitted, setSubmitted] = useState(false);
-  const [userId, setUserId] = useState(null); // This line should define the setUserId function
+  const [feedbackList, setFeedbackList] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [profilePicUrl, setProfilePicUrl] = useState('/images/default-pfp.png'); // Default
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
-  // Fetch the user ID from localStorage or a global state/context (assuming you store the user ID after login)
   useEffect(() => {
-    const storedUserId = localStorage.getItem('user_id'); // Assuming you store user_id in localStorage
-    if (storedUserId) {
-      setUserId(storedUserId); // Set the user_id from localStorage
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    const storedProfilePic = localStorage.getItem('profile_pic_url');
+
+    if (storedProfilePic) {
+      setProfilePicUrl(storedProfilePic);
+    } else if (userData?.profilePicUrl) {
+      setProfilePicUrl(userData.profilePicUrl);
     }
+
+    if (userData) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
+
+    fetchFeedbacks();
+
+    const handleStorageChange = (event) => {
+      if (event.key === 'profile_pic_url') {
+        const newProfilePic = event.newValue || '/images/default-pfp.png';
+        setProfilePicUrl(newProfilePic);
+      }
+      if (event.key === 'userData') {
+        const updatedUserData = JSON.parse(event.newValue);
+        if (updatedUserData) {
+          setIsLoggedIn(true);
+          if (updatedUserData.profilePicUrl) {
+            setProfilePicUrl(updatedUserData.profilePicUrl);
+          }
+        } else {
+          setIsLoggedIn(false);
+          setProfilePicUrl('/images/default-pfp.png');
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const handleFeedbackSubmit = (e) => {
+  const fetchFeedbacks = async () => {
+    try {
+      const response = await fetch('http://localhost:3500/api/feedback/fetch-feedback');
+      if (!response.ok) throw new Error('Failed to fetch feedbacks');
+      const data = await response.json();
+      setFeedbackList(data);
+
+      const totalRating = data.reduce((sum, item) => sum + item.rating, 0);
+      const avgRating = data.length ? totalRating / data.length : 0;
+      setAverageRating(avgRating.toFixed(1));
+    } catch (error) {
+      console.error('Error fetching feedbacks:', error);
+    }
+  };
+
+  const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
+
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    const userId = userData?.userId;
 
     if (!userId) {
       alert('You must be logged in to submit feedback');
       return;
     }
 
-    // Here you can submit the feedback along with user_id to your backend API
-    const feedbackData = {
-      user_id: userId, // Include the logged-in user's ID
-      feedback: feedback,
-    };
+    if (feedback.trim() === '') {
+      alert('Please enter your feedback before submitting.');
+      return;
+    }
 
-    // Example of sending feedback to the backend (you can replace this with actual API logic)
-    fetch('http://localhost:3500/submit-feedback', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(feedbackData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setSubmitted(true);
-        setFeedback('');
-      })
-      .catch((error) => {
-        console.error('Error submitting feedback:', error);
+    try {
+      const feedbackData = {
+        user_id: userId,
+        comment: feedback,
+        rating: rating,
+      };
+
+      const response = await fetch('http://localhost:3500/api/feedback/submit-feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedbackData),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback');
+      }
+
+      setSubmitted(true);
+      setFeedback('');
+      setRating(0);
+      fetchFeedbacks();
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+    }
+  };
+
+  const handleStartEvaluation = () => {
+    if (isLoggedIn) {
+      navigate('/form');
+    } else {
+      navigate('/login');
+    }
   };
 
   return (
     <div className="home">
       {/* Header */}
       <header className="header">
-        <div className="logo">
-          Symptom Diagnosing Tool <span className="icon">➕</span>
-        </div>
+        <Link to="/" className="logo">
+          <span className="logo-text">Symptom Diagnosing Tool</span>
+          <span className="logo-plus">+</span>
+        </Link>
         <nav className="nav-links">
-          <Link to="/">Home</Link>
           <Link to="/contact">Contact Us</Link>
-          <Link to="/login">Login</Link>
-          <Link to="/register">Register</Link>
-          <Link to="/profile" className="profile-icon" role="img" aria-label="Profile">⚫</Link>
+          {!isLoggedIn && (
+            <>
+              <Link to="/login">Login</Link>
+              <Link to="/register">Register</Link>
+            </>
+          )}
+          <Link to="/profile" className="profile-link">
+            <img
+              src={profilePicUrl}
+              alt="Profile"
+              className="profile-icon"
+            />
+          </Link>
         </nav>
       </header>
 
@@ -68,7 +152,9 @@ const Home = () => {
         <div className="hero-content">
           <h1>Welcome to the Symptom Diagnosing Tool</h1>
           <p>Input your symptoms and get reliable, data-backed insights into potential health conditions.</p>
-          <Link to="/form" className="cta-button">Start the Evaluation</Link>
+          <button className="cta-button" onClick={handleStartEvaluation}>
+            Start the Evaluation
+          </button>
         </div>
       </div>
 
@@ -79,7 +165,7 @@ const Home = () => {
           <div className="card">
             <div className="card-icon">📊</div>
             <h3>Accurate Predictions</h3>
-            <p>Our machine learning models provide reliable disease predictions based on your symptoms.</p>
+            <p>Our evaluation form with similarity measurements provides reliable disease predictions based on your symptoms.</p>
           </div>
           <div className="card">
             <div className="card-icon">💡</div>
@@ -94,6 +180,41 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Testimonials Section */}
+      <div className="testimonials">
+        <h2>What Our Users Say</h2>
+
+        <div className="average-rating">
+          Average Rating: {averageRating} ⭐
+        </div>
+
+        <div className="testimonial-carousel">
+          {feedbackList.length > 0 ? (
+            feedbackList.map((item, index) => (
+              <div className="testimonial-card" key={index}>
+                <p>"{item.comment}"</p>
+                <h4>- {item.name || 'Anonymous'} | ⭐ {item.rating} / 5</h4>
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="testimonial-card">
+                <p>"This tool helped me so much!"</p>
+                <h4>- User A</h4>
+              </div>
+              <div className="testimonial-card">
+                <p>"Highly recommend this for quick diagnosis."</p>
+                <h4>- User B</h4>
+              </div>
+              <div className="testimonial-card">
+                <p>"The experience was smooth and professional."</p>
+                <h4>- User C</h4>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       {/* User Feedback Section */}
       <div className="feedback-section">
         <h2>We Value Your Feedback</h2>
@@ -105,6 +226,24 @@ const Home = () => {
             placeholder="Enter your feedback here..."
             rows="5"
           ></textarea>
+
+          <div className="rating-stars">
+            <span>Rate us: </span>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                onClick={() => setRating(star)}
+                style={{
+                  cursor: 'pointer',
+                  color: star <= rating ? '#ffc107' : '#ccc',
+                  fontSize: '24px'
+                }}
+              >
+                ★
+              </span>
+            ))}
+          </div>
+
           <button type="submit" className="submit-button">Submit Feedback</button>
         </form>
         {submitted && (

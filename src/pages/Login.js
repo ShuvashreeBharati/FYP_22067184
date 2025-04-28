@@ -32,34 +32,32 @@ const Login = () => {
     setErrMsg("");
 
     try {
-      // 1. Make login request
       const response = await api.post("/auth/login", { 
         email, 
         password: pwd 
       });
 
-      // 2. Handle response (matches authController.js output)
       const { token, user } = response.data;
-      
+
       if (!token || !user?.userId) {
         throw new Error("Invalid server response");
       }
 
-      // 3. Update auth state (matches AuthProvider expectations)
+      // Save user_id into localStorage for Home.js feedback form
+      localStorage.setItem('user_id', user.userId);
+
+      // Update auth context
       login(user, token);
-      
-      // 4. Clear form
+
       setEmail("");
       setPwd("");
 
-      // 5. Redirect (preserves symptom data if coming from form)
       navigate(symptoms ? "/form" : from, { 
         state: symptoms ? { symptoms } : null,
         replace: true 
       });
 
     } catch (err) {
-      // Enhanced error handling
       if (!err.response) {
         setErrMsg("Server not responding");
       } else {
@@ -77,7 +75,6 @@ const Login = () => {
 
   return (
     <section className="login-section">
-      {/* Error message display */}
       <p
         ref={errRef}
         className={errMsg ? "errmsg" : "offscreen"}
@@ -87,15 +84,13 @@ const Login = () => {
       </p>
 
       <h1>Sign In</h1>
-      
-      {/* Contextual notice for form redirects */}
+
       {location.state?.from?.pathname === "/form" && (
         <p className="login-notice">
           Please login to save your diagnosis history.
         </p>
       )}
 
-      {/* Login form */}
       <form onSubmit={handleSubmit}>
         <label htmlFor="email">Email:</label>
         <input
@@ -123,7 +118,6 @@ const Login = () => {
         </button>
       </form>
 
-      {/* Registration link */}
       <p>
         Need an Account?<br />
         <span className="line">

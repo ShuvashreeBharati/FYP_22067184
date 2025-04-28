@@ -1,10 +1,18 @@
+.body{
+  font-family: 'Inter', sans-serif;
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+
 /* Overall Form Container */
 .form-container {
   max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
-  background: #f9f9f9;
-  border-radius: 10px;
+  background: #e8edf3;
+  border-radius: 20px;
+  box-shadow: 8px 8px 20px rgba(173, 200, 226, 0.5), -8px -8px 20px #ffffff;
 }
 
 /* Form Headings */
@@ -12,7 +20,7 @@
 .form-container h2, 
 .form-container h3 {
   text-align: center;
-  color: #0c4680; /* Blue color */
+  color: #2d5d89;
 }
 
 /* Form Groups */
@@ -21,56 +29,107 @@
 }
 
 .form-group label {
-  font-weight: bold;
+  font-weight: 600;
   display: block;
   margin-bottom: 0.5rem;
+  color: #2e5c91;
 }
 
+/* Enhanced Textarea */
 textarea {
   width: 100%;
-  padding: 0.8rem;
+  padding: 1rem;
   font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border: none;
+  border-radius: 20px;
+  background: #ebf3fb;
+  box-shadow: inset 6px 6px 12px rgba(180, 210, 240, 0.4), inset -6px -6px 12px #ffffff;
   resize: vertical;
+  transition: all 0.3s ease;
+}
+
+textarea:focus {
+  background: #e2eff9;
+  box-shadow: inset 2px 2px 6px rgba(180, 210, 240, 0.5), inset -2px -2px 6px #ffffff;
+  outline: none;
 }
 
 /* Example Text */
 .example-text {
   margin-top: 0.5rem;
   font-size: 0.9rem;
-  color: #555;
+  color: #5a7fa5;
 }
 
-/* Checkbox Grid */
+/* Enhanced Checkbox Grid */
 .checkbox-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
+  gap: 14px;
   max-height: 300px;
   overflow-y: auto;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fafafa;
+  padding: 1rem;
+  background: #e7eff7;
+  border-radius: 20px;
+  box-shadow: inset 6px 6px 12px rgba(180, 210, 240, 0.4), inset -6px -6px 12px #ffffff;
+  scrollbar-width: thin;
+  scrollbar-color: #b3c9e5 transparent;
 }
 
+.checkbox-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.checkbox-grid::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.checkbox-grid::-webkit-scrollbar-thumb {
+  background-color: #b3cae6;
+  border-radius: 10px;
+  border: 2px solid #f5faff;
+}
+
+/* Checkbox Item */
 .checkbox-item {
   display: flex;
   align-items: center;
+  padding: 0.6rem 0.8rem;
+  background: #eaf2fa;
+  border-radius: 12px;
+  box-shadow: 2px 2px 6px rgba(180, 210, 240, 0.3), -2px -2px 6px #ffffff;
+  transition: all 0.2s ease;
+  font-size: 0.95rem; /* slight tweak for better balance */
+}
+
+.checkbox-item:hover {
+  background: #dde9f6;
 }
 
 .checkbox-item input[type="checkbox"] {
-  margin-right: 8px;
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0; /* prevents checkbox from shrinking */
 }
+
+.checkbox-item label {
+  flex: 1;
+  font-weight: 500;
+  color: #355d8c;
+  cursor: pointer;
+}
+
 
 /* Error Message */
 .error-message {
-  background-color: #ffe6e6;
+  background: #ffe6e6;
   color: #cc0000;
   padding: 0.8rem;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-top: 1rem;
+  box-shadow: 3px 3px 8px rgba(255, 0, 0, 0.1), -3px -3px 8px rgba(255, 0, 0, 0.1);
   position: relative;
 }
 
@@ -89,20 +148,23 @@ textarea {
 button[type="submit"] {
   width: 100%;
   padding: 1rem;
-  background-color: #0c4680; /* Blue color */
-  color: white;
+  background: #f5faff;
+  color: #2d5d89;
   font-size: 1.1rem;
+  font-weight: bold;
   border: none;
-  border-radius: 8px;
+  border-radius: 20px;
+  box-shadow: 8px 8px 16px rgba(180, 210, 240, 0.6), -8px -8px 16px #ffffff;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
 }
 
 button[type="submit"]:hover {
-  background-color: #0c2845; /* Darker blue */
+  box-shadow: inset 6px 6px 12px rgba(180, 210, 240, 0.4), inset -6px -6px 12px #ffffff;
+  transform: translateY(-2px);
 }
 
-/* Spinner during loading */
+/* Spinner */
 .spinner {
   border: 3px solid #f3f3f3;
   border-top: 3px solid #0066cc;
@@ -123,7 +185,7 @@ button[type="submit"]:hover {
 .login-notice {
   margin-top: 1rem;
   font-size: 0.9rem;
-  color: #666;
+  color: #5a7fa5;
   text-align: center;
 }
 
@@ -148,35 +210,40 @@ button[type="submit"]:hover {
 
 /* Prediction Card */
 .prediction-card {
-  background-color: #e6f0ff;
+  background: #f5faff;
   padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.2);
+  border-radius: 20px;
+  box-shadow: 6px 6px 16px rgba(180, 210, 240, 0.5), -6px -6px 16px #ffffff;
+  transition: transform 0.3s ease;
 }
 
-/* Separate Description Card */
+.prediction-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Description Card */
 .description-card {
-  background-color: #f0f8ff;
+  background: #f0f8ff;
   padding: 1rem;
   margin-top: 1rem;
-  border-left: 4px solid #0066cc;
-  border-radius: 8px;
+  border-left: 4px solid #4dacac;
+  border-radius: 12px;
 }
 
-/* Separate Precautions Card */
+/* Precautions Card */
 .precautions-card {
-  background-color: #f0f8ff;
+  background: #f0f8ff;
   padding: 1rem;
   margin-top: 1rem;
-  border-left: 4px solid #0066cc;
-  border-radius: 8px;
+  border-left: 4px solid #4dacac;
+  border-radius: 12px;
 }
 
 .precautions-card ul {
   list-style: square inside;
 }
 
-/* Result Action Buttons */
+/* Result Actions */
 .result-actions {
   margin-top: 2rem;
   display: flex;
@@ -187,20 +254,23 @@ button[type="submit"]:hover {
 
 .new-diagnosis-btn, 
 .view-history-btn {
-  background-color: #0066cc;
+  background: #4dacac;
   color: white;
   padding: 0.8rem 1.2rem;
   border: none;
-  border-radius: 8px;
-  text-decoration: none;
-  text-align: center;
+  border-radius: 15px;
   font-size: 1rem;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
+  box-shadow: 6px 6px 12px rgba(76, 172, 172, 0.4), -6px -6px 12px rgba(76, 172, 172, 0.3);
+  transition: all 0.3s ease;
 }
 
 .new-diagnosis-btn:hover,
 .view-history-btn:hover {
-  background-color: #0055aa;
+  background: #58b5b0;
+  transform: scale(1.05);
 }
 
 /* Back Link */
@@ -208,10 +278,14 @@ button[type="submit"]:hover {
   display: block;
   margin-top: 2rem;
   text-align: center;
-  color: #0066cc;
+  color: #29537a !important;
   text-decoration: none;
+  font-weight: 500;
 }
 
 .back-link:hover {
+  color: #1d3d5d;
   text-decoration: underline;
 }
+
+
