@@ -116,7 +116,7 @@ def predict_or_fetch_info():
         info = disease_info_dict.get(disease_name, {})
         return jsonify(success=True, precautions=info.get('precautions', []))
 
-    # --- NEW: Accept both checkbox & text inputs ---
+    # --- Accept both checkbox & text inputs ---
     raw_selected_symptoms = data.get('selected_symptoms', '')  # From checkboxes
     raw_text_symptoms = data.get('text_symptoms', '')  # From free-text field
     user_id = data.get('user_id')

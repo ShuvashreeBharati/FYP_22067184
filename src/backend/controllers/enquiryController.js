@@ -1,4 +1,4 @@
-const pool = require('../config/db'); // your db connection
+const pool = require('../config/db'); 
 
 // Controller to handle sending enquiries
 exports.sendEnquiry = async (req, res) => {

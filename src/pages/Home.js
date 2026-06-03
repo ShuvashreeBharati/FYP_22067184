@@ -13,38 +13,41 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    const storedProfilePic = localStorage.getItem('profile_pic_url');
 
-    if (storedProfilePic) {
-      setProfilePicUrl(storedProfilePic);
-    } else if (userData?.profilePicUrl) {
-      setProfilePicUrl(userData.profilePicUrl);
-    }
+    const userData = JSON.parse(localStorage.getItem('userData'));
 
     if (userData) {
       setIsLoggedIn(true);
+      const storedProfilePic = localStorage.getItem('profile_pic_url');
+      if (storedProfilePic) {
+        setProfilePicUrl(storedProfilePic);
+      }
     } else {
       setIsLoggedIn(false);
+      setProfilePicUrl('/images/default-pfp.png'); // Always reset to default if not logged in
     }
 
     fetchFeedbacks();
 
     const handleStorageChange = (event) => {
-      if (event.key === 'profile_pic_url') {
-        const newProfilePic = event.newValue || '/images/default-pfp.png';
-        setProfilePicUrl(newProfilePic);
-      }
       if (event.key === 'userData') {
         const updatedUserData = JSON.parse(event.newValue);
         if (updatedUserData) {
           setIsLoggedIn(true);
-          if (updatedUserData.profilePicUrl) {
-            setProfilePicUrl(updatedUserData.profilePicUrl);
+          const storedProfilePic = localStorage.getItem('profile_pic_url');
+          if (storedProfilePic) {
+            setProfilePicUrl(storedProfilePic);
           }
         } else {
           setIsLoggedIn(false);
-          setProfilePicUrl('/images/default-pfp.png');
+          setProfilePicUrl('/images/default-pfp.png'); // Reset to default on logout
+        }
+      }
+      if (event.key === 'profile_pic_url') {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        if (userData) {
+          const newProfilePic = event.newValue || '/images/default-pfp.png';
+          setProfilePicUrl(newProfilePic);
         }
       }
     };
