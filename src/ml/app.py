@@ -69,11 +69,16 @@ def save_to_db(user_id, symptoms, predictions):
     finally:
         conn.close()
 
+
 # ------------------ Defining the Jaccard Similarity Function ------------------
+import __main__
+
 def jaccard_similarity(user_symptoms, disease_symptoms):
     intersection = np.sum(np.minimum(user_symptoms, disease_symptoms))
     union = np.sum(np.maximum(user_symptoms, disease_symptoms))
     return intersection / union if union != 0 else 0
+
+__main__.jaccard_similarity = jaccard_similarity
 
 # ------------------ MODEL & ARTIFACTS ------------------
 model_pkg = joblib.load('symptom_disease_prediction_model.joblib')
