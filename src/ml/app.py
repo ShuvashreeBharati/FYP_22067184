@@ -12,6 +12,10 @@ from dotenv import load_dotenv
 from sklearn.metrics.pairwise import cosine_similarity
 
 import nltk
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('omw-1.4', quiet=True)
+
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
