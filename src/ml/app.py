@@ -10,6 +10,11 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 from sklearn.metrics.pairwise import cosine_similarity
+
+import nltk
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
@@ -19,15 +24,18 @@ CORS(app)
 
 # ------------------ DB CONFIG ------------------
 DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'localhost'),
-    'database': os.getenv('DB_NAME', 'symptom_diagnosing_tool_db'),
-    'user': os.getenv('DB_USER', 'postgres'),
-    'password': os.getenv('DB_PASSWORD', 'shuvashree'),
-    'port': os.getenv('DB_PORT', '5432')
+    'host': os.getenv('DB_HOST'),
+    'database': os.getenv('DB_NAME'),
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASSWORD'),
+    'port': os.getenv('DB_PORT', '5432'),
 }
 
 def get_db():
-    return psycopg2.connect(**DB_CONFIG)
+    return psycopg2.connect(
+        **DB_CONFIG,
+        sslmode='require'
+    )
 
 def save_to_db(user_id, symptoms, predictions):
     conn = get_db()
@@ -68,7 +76,7 @@ def save_to_db(user_id, symptoms, predictions):
 def jaccard_similarity(user_symptoms, disease_symptoms):
     intersection = np.sum(np.minimum(user_symptoms, disease_symptoms))
     union = np.sum(np.maximum(user_symptoms, disease_symptoms))
-    return intersection / union
+    return intersection / union if union != 0 else 0
 
 # ------------------ MODEL & ARTIFACTS ------------------
 model_pkg = joblib.load('symptom_disease_prediction_model.joblib')
@@ -95,7 +103,7 @@ def preprocess_text(text):
     tokens = [lemmatizer.lemmatize(word) for word in tokens]
     return ' '.join(tokens)
 
-def jaccard_similarity(set1, set2):
+def jaccard_similarity_index(set1, set2):
     intersection = len(set1.intersection(set2))
     union = len(set1.union(set2))
     return intersection / union if union != 0 else 0
@@ -157,7 +165,7 @@ def predict_or_fetch_info():
         jac_similarities = []
         for _, row in df.iterrows():
             disease_vector = row[numeric_cols].values
-            jac_sim = jaccard_similarity(set(np.where(user_symptom_vector > 0)[0]), set(np.where(disease_vector > 0)[0]))
+            jac_sim = jaccard_similarity_index(set(np.where(user_symptom_vector > 0)[0]), set(np.where(disease_vector > 0)[0]))
             jac_similarities.append(jac_sim)
         jac_similarities = np.array(jac_similarities)
         if jac_similarities.max() > 0:
